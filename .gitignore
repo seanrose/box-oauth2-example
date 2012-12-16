@@ -36,3 +36,4 @@ nosetests.xml
 
 venv
 *.pyc
+.env
