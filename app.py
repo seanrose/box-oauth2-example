@@ -2,9 +2,21 @@ import os
 from flask import Flask, redirect, request, session, url_for, jsonify
 import requests
 from datetime import datetime, timedelta
+from functools import wraps
 
 app = Flask(__name__)
 BASE_URL = 'https://api.box.com/'
+
+
+def requires_auth(func):
+    @wraps(func)
+    def checked_auth(*args, **kwargs):
+        if 'oauth_credentials' not in session:
+            return redirect(url_for('login'))
+        if oauth_credentials_are_expired():
+            refresh_oauth_credentials()
+        return func(*args, **kwargs)
+    return checked_auth
 
 
 @app.route('/')
@@ -13,9 +25,8 @@ def redirect_to_folder():
 
 
 @app.route('/box-folder/<folder_id>')
+@requires_auth
 def box_folder(folder_id):
-    if 'oauth_credentials' not in session:
-        return redirect(url_for('login'))
     box_folder = get_box_folder(folder_id)
     return jsonify(box_folder)
 
@@ -29,14 +40,16 @@ def box_auth():
 
 @app.route('/login')
 def login():
-    return redirect(build_box_authorization_url())
+    params = {
+        'response_type': 'code',
+        'client_id': os.environ['BOX_CLIENT_ID']
+    }
+    return redirect(build_box_api_url('oauth2/authorize', params=params))
 
 
 def get_box_folder(folder_id):
-    if oauth_credentials_are_expired():
-        refresh_oauth_credentials()
     resource = '2.0/folders/%s' % folder_id
-    url = '%s%s' % (BASE_URL, resource)
+    url = build_box_api_url(resource)
 
     bearer_token = session['oauth_credentials']['access_token']
     auth_header = {'Authorization': 'Bearer %s' % bearer_token}
@@ -59,13 +72,12 @@ def refresh_oauth_credentials():
 def set_oauth_credentials(oauth_response):
     token_expiration = oauth_response['expires_in']
     session['oauth_expiration'] = (datetime.now()
-                                   + timedelta(seconds=token_expiration - 100))
+                                   + timedelta(seconds=token_expiration / 2))
     session['oauth_credentials'] = oauth_response
 
 
 def get_token(**kwargs):
-    endpoint = 'oauth2/token'
-    url = '%s%s' % (BASE_URL, endpoint)
+    url = build_box_api_url('oauth2/token')
     if 'grant_type' not in kwargs:
         kwargs['grant_type'] = 'authorization_code'
     kwargs['client_id'] = os.environ['BOX_CLIENT_ID']
@@ -74,10 +86,9 @@ def get_token(**kwargs):
     return token_response.json
 
 
-def build_box_authorization_url():
-    endpoint = 'oauth2/authorize'
-    url = ('%s%s?response_type=code&client_id=%s'
-           % (BASE_URL, endpoint, os.environ['BOX_CLIENT_ID']))
+def build_box_api_url(endpoint, params=''):
+    params = '&'.join(['%s=%s' % (k, v) for k, v in params.iteritems()])
+    url = '%s%s?%s' % (BASE_URL, endpoint, params)
     return url
 
 
