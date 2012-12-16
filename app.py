@@ -9,7 +9,7 @@ BASE_URL = 'https://api.box.com/'
 
 @app.route('/')
 def redirect_to_folder():
-    return redirect(url_for('box_folder'))
+    return redirect(url_for('box_folder', folder_id='0'))
 
 
 @app.route('/box-folder/<folder_id>')
