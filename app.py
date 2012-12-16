@@ -7,23 +7,26 @@ app = Flask(__name__)
 BASE_URL = 'https://api.box.com/'
 
 
+@app.route('/')
+def redirect_to_folder():
+    return redirect(url_for('box_folder'))
+
+
 @app.route('/box-folder/<folder_id>')
 def box_folder(folder_id):
-    resource = '2.0/folders/%s' % folder_id
-    url = '%s%s' % (BASE_URL, resource)
-
-    bearer_token = session['oauth_credentials']['access_token']
-    auth_header = {'Authorization': 'Bearer %s' % bearer_token}
-
-    api_response = requests.get(url, headers=auth_header)
-    box_folder = api_response.json
+    if 'oauth_credentials' not in session:
+        return redirect(url_for('login'))
+    box_folder = get_box_folder(folder_id)
     return jsonify(box_folder)
 
 
 @app.route('/box-auth')
 def box_auth():
-    session['oauth_credentials'] = get_access_token(request.args.get('code'))
-    session['oauth_expiration'] = datetime.now() + timedelta(seconds=3600)
+    oauth_response = get_token(code=request.args.get('code'))
+    session['oauth_credentials'] = oauth_response
+    token_expiration = oauth_response['expires_in']
+    session['oauth_expiration'] = (datetime.now()
+                                   + timedelta(seconds=token_expiration))
     return redirect(url_for('box_folder', folder_id=0))
 
 
@@ -32,17 +35,36 @@ def login():
     return redirect(build_box_authorization_url())
 
 
-def get_access_token(code):
+def get_box_folder(folder_id):
+    if oauth_credentials_are_expired():
+        refresh_oauth_credentials()
+    resource = '2.0/folders/%s' % folder_id
+    url = '%s%s' % (BASE_URL, resource)
+
+    bearer_token = session['oauth_credentials']['access_token']
+    auth_header = {'Authorization': 'Bearer %s' % bearer_token}
+
+    api_response = requests.get(url, headers=auth_header)
+    return api_response.json
+
+
+def oauth_credentials_are_expired():
+    return datetime.now > session['oauth_expiration']
+
+
+def refresh_oauth_credentials():
+    return ''
+
+
+def get_token(**kwargs):
     endpoint = 'oauth2/token'
     url = '%s%s' % (BASE_URL, endpoint)
-    form_data = {
-        'grant_type': 'authorization_code',
-        'code': code,
-        'client_id': os.environ['BOX_CLIENT_ID'],
-        'client_secret': os.environ['BOX_CLIENT_SECRET']
-    }
-    oauth_response = requests.post(url, data=form_data)
-    return oauth_response.json
+    if 'grant_type' not in kwargs:
+        kwargs['grant_type'] = 'authorization_code'
+    kwargs['client_id'] = os.environ['BOX_CLIENT_ID']
+    kwargs['client_secret'] = os.environ['BOX_CLIENT_SECRET']
+    token_response = requests.post(url, data=kwargs)
+    return token_response.json
 
 
 def build_box_authorization_url():
