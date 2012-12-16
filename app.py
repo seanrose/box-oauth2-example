@@ -10,7 +10,7 @@ BASE_URL = 'https://api.box.com/'
 @app.route('/box-folder/<folder_id>')
 def box_folder(folder_id):
     resource = '2.0/folders/%s' % folder_id
-    url = '%s%s' (BASE_URL, resource)
+    url = '%s%s' % (BASE_URL, resource)
 
     bearer_token = session['oauth_credentials']['access_token']
     auth_header = {'Authorization': 'Bearer %s' % bearer_token}
