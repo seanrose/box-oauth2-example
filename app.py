@@ -23,10 +23,7 @@ def box_folder(folder_id):
 @app.route('/box-auth')
 def box_auth():
     oauth_response = get_token(code=request.args.get('code'))
-    session['oauth_credentials'] = oauth_response
-    token_expiration = oauth_response['expires_in']
-    session['oauth_expiration'] = (datetime.now()
-                                   + timedelta(seconds=token_expiration))
+    set_oauth_credentials(oauth_response.json)
     return redirect(url_for('box_folder', folder_id=0))
 
 
@@ -53,7 +50,17 @@ def oauth_credentials_are_expired():
 
 
 def refresh_oauth_credentials():
-    return ''
+    refresh_token = session['oauth_credentials']['refresh_token']
+    oauth_response = get_token(grant_type='refresh_token',
+                               refresh_token=refresh_token)
+    set_oauth_credentials(oauth_response.json)
+
+
+def set_oauth_credentials(oauth_response):
+    token_expiration = oauth_response['expires_in']
+    session['oauth_expiration'] = (datetime.now()
+                                   + timedelta(seconds=token_expiration - 100))
+    session['oauth_credentials'] = oauth_response
 
 
 def get_token(**kwargs):
