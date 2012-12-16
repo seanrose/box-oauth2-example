@@ -41,7 +41,7 @@ def get_access_token(code):
         'client_secret': os.environ['BOX_CLIENT_SECRET']
     }
     oauth_response = requests.post(url, data=form_data)
-    return oauth_response
+    return oauth_response.json
 
 
 def build_box_authorization_url():
