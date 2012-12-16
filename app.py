@@ -47,6 +47,12 @@ def login():
     return redirect(build_box_api_url('oauth2/authorize', params=params))
 
 
+@app.route('logout')
+def logout():
+    session.clear()
+    return 'You are now logged out of your Box account.'
+
+
 def get_box_folder(folder_id):
     resource = '2.0/folders/%s' % folder_id
     url = build_box_api_url(resource)
