@@ -49,7 +49,7 @@ def get_box_folder(folder_id):
 
 
 def oauth_credentials_are_expired():
-    return datetime.now > session['oauth_expiration']
+    return datetime.now() > session['oauth_expiration']
 
 
 def refresh_oauth_credentials():
