@@ -23,7 +23,7 @@ def box_folder(folder_id='0'):
 def box_auth():
     session['oauth_credentials'] = get_access_token(request.args.get('code'))
     session['oauth_expiration'] = datetime.now() + timedelta(seconds=3600)
-    return redirect(url_for(box_folder))
+    return redirect(url_for('box_folder'))
 
 
 @app.route('/login')
