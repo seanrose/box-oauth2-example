@@ -23,7 +23,7 @@ def box_folder(folder_id):
 @app.route('/box-auth')
 def box_auth():
     oauth_response = get_token(code=request.args.get('code'))
-    set_oauth_credentials(oauth_response.json)
+    set_oauth_credentials(oauth_response)
     return redirect(url_for('box_folder', folder_id=0))
 
 
