@@ -9,6 +9,10 @@ BASE_URL = 'https://api.box.com/'
 
 
 def requires_auth(func):
+    """
+    Checks for OAuth credentials in the session
+    Will refresh access token if it's expired
+    """
     @wraps(func)
     def checked_auth(*args, **kwargs):
         if 'oauth_credentials' not in session:
@@ -69,6 +73,9 @@ def oauth_credentials_are_expired():
 
 
 def refresh_oauth_credentials():
+    """
+    Gets a new access token using the refresh token grant type
+    """
     refresh_token = session['oauth_credentials']['refresh_token']
     oauth_response = get_token(grant_type='refresh_token',
                                refresh_token=refresh_token)
@@ -76,6 +83,10 @@ def refresh_oauth_credentials():
 
 
 def set_oauth_credentials(oauth_response):
+    """
+    Sets the OAuth access/refresh tokens in the session,
+    along with when the access token will expire
+    """
     token_expiration = oauth_response['expires_in']
     session['oauth_expiration'] = (datetime.now()
                                    + timedelta(seconds=token_expiration / 2))
@@ -83,6 +94,14 @@ def set_oauth_credentials(oauth_response):
 
 
 def get_token(**kwargs):
+    """
+    Used to make token requests to the Box OAuth2 Endpoint
+
+    Args:
+        grant_type
+        code
+        refresh_token
+    """
     url = build_box_api_url('oauth2/token')
     if 'grant_type' not in kwargs:
         kwargs['grant_type'] = 'authorization_code'
