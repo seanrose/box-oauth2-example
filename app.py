@@ -47,7 +47,7 @@ def login():
     return redirect(build_box_api_url('oauth2/authorize', params=params))
 
 
-@app.route('logout')
+@app.route('/logout')
 def logout():
     session.clear()
     return 'You are now logged out of your Box account.'
