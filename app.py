@@ -87,7 +87,8 @@ def get_token(**kwargs):
 
 
 def build_box_api_url(endpoint, params=''):
-    params = '&'.join(['%s=%s' % (k, v) for k, v in params.iteritems()])
+    if params != '':
+        params = '&'.join(['%s=%s' % (k, v) for k, v in params.iteritems()])
     url = '%s%s?%s' % (BASE_URL, endpoint, params)
     return url
 
