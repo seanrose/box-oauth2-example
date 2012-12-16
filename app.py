@@ -15,7 +15,8 @@ def box_folder(folder_id):
     bearer_token = session['oauth_credentials']['access_token']
     auth_header = {'Authorization': 'Bearer %s' % bearer_token}
 
-    box_folder = requests.get(url, headers=auth_header)
+    api_response = requests.get(url, headers=auth_header)
+    box_folder = api_response.json
     return jsonify(box_folder)
 
 
