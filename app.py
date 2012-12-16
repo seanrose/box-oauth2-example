@@ -8,7 +8,7 @@ BASE_URL = 'https://api.box.com/'
 
 
 @app.route('/box-folder/<folder_id>')
-def box_folder(folder_id='0'):
+def box_folder(folder_id):
     resource = '2.0/folders/%s' % folder_id
     url = '%s%s' (BASE_URL, resource)
 
@@ -23,7 +23,7 @@ def box_folder(folder_id='0'):
 def box_auth():
     session['oauth_credentials'] = get_access_token(request.args.get('code'))
     session['oauth_expiration'] = datetime.now() + timedelta(seconds=3600)
-    return redirect(url_for('box_folder'))
+    return redirect(url_for('box_folder', folder_id=0))
 
 
 @app.route('/login')
