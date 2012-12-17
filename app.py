@@ -79,7 +79,7 @@ def refresh_oauth_credentials():
     refresh_token = session['oauth_credentials']['refresh_token']
     oauth_response = get_token(grant_type='refresh_token',
                                refresh_token=refresh_token)
-    set_oauth_credentials(oauth_response.json)
+    set_oauth_credentials(oauth_response)
 
 
 def set_oauth_credentials(oauth_response):
