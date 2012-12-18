@@ -10,8 +10,7 @@ BASE_URL = 'https://api.box.com/'
 
 def requires_auth(func):
     """
-    Does three checks:
-    - Checks if there are any OAuth oauth_credentials
+    Does two checks:
     - Checks to see if the OAuth credentials are expired based
     on what we know about the last access token we got
     and if so refreshes the access_token
@@ -22,17 +21,8 @@ def requires_auth(func):
     def checked_auth(*args, **kwargs):
         if 'oauth_credentials' not in session:
             return redirect(url_for('login'))
-
-        if oauth_credentials_are_expired():
-            refresh_oauth_credentials()
-
-        api_response = func(*args, **kwargs)
-
-        if api_response.status_code == 401:
-            refresh_oauth_credentials()
-            api_response = func(*args, **kwargs)
-
-        return api_response
+        else:
+            return func(*args, **kwargs)
     return checked_auth
 
 
@@ -44,8 +34,8 @@ def redirect_to_folder():
 @app.route('/box-folder/<folder_id>')
 @requires_auth
 def box_folder(folder_id):
-    box_folder = get_box_folder(folder_id)
-    return jsonify(box_folder)
+    api_response = get_box_folder(folder_id)
+    return jsonify(api_response.json)
 
 
 @app.route('/box-auth')
@@ -70,6 +60,30 @@ def logout():
     return 'You are now logged out of your Box account.'
 
 
+def refresh_access_token_if_needed(func):
+    """
+    Does two checks:
+    - Checks to see if the OAuth credentials are expired based
+    on what we know about the last access token we got
+    and if so refreshes the access_token
+    - Checks to see if the status code of the response is 401,
+    and if so refreshes the access_token
+    """
+    @wraps(func)
+    def checked_auth(*args, **kwargs):
+        if oauth_credentials_are_expired():
+            refresh_oauth_credentials()
+
+        api_response = func(*args, **kwargs)
+        if api_response.status_code == 401:
+            refresh_oauth_credentials()
+            api_response = func(*args, **kwargs)
+
+        return api_response
+    return checked_auth
+
+
+@refresh_access_token_if_needed
 def get_box_folder(folder_id):
     resource = '2.0/folders/%s' % folder_id
     url = build_box_api_url(resource)
@@ -78,7 +92,7 @@ def get_box_folder(folder_id):
     auth_header = {'Authorization': 'Bearer %s' % bearer_token}
 
     api_response = requests.get(url, headers=auth_header)
-    return api_response.json
+    return api_response
 
 
 def oauth_credentials_are_expired():
@@ -99,10 +113,13 @@ def set_oauth_credentials(oauth_response):
     """
     Sets the OAuth access/refresh tokens in the session,
     along with when the access token will expire
+
+    Will include a 15 second buffer on the exipration time
+    to account for any network slowness.
     """
     token_expiration = oauth_response['expires_in']
     session['oauth_expiration'] = (datetime.now()
-                                   + timedelta(seconds=token_expiration / 2))
+                                   + timedelta(seconds=token_expiration - 15))
     session['oauth_credentials'] = oauth_response
 
 
