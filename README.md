@@ -11,7 +11,7 @@ Before you can do anything with the Box API, you need to [register to get a Clie
 
 # Setup
 
-First create a virtual environment, and activate it
+First create a [virtual environment](http://pypi.python.org/pypi/virtualenv), and activate it
 
     >>> virtualenv venv --distribute
     >>> source venv/bin/activate
