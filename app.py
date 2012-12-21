@@ -78,6 +78,7 @@ def refresh_access_token_if_needed(func):
 
 @refresh_access_token_if_needed
 def get_box_folder(folder_id):
+    """No error checking. If an error occurs, we just return its JSON"""
     resource = '2.0/folders/%s' % folder_id
     url = build_box_api_url(resource)
 
