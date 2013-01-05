@@ -52,6 +52,7 @@ def logout():
     session.clear()
     return 'You are now logged out of your Box account.'
 
+# OAuth 2 Methods
 
 def refresh_access_token_if_needed(func):
     """
