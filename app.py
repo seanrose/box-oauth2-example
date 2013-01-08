@@ -35,7 +35,11 @@ def redirect_to_folder():
 @requires_auth
 def box_folder(folder_id):
     api_response = get_box_folder(folder_id)
-    return jsonify(api_response.json)
+    page_output = {
+        'access_token': session['oauth_credentials']['access_token'],
+        'api_response': api_response.json
+    }
+    return jsonify(page_output)
 
 
 @app.route('/box-auth')
