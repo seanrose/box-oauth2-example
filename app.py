@@ -9,14 +9,7 @@ BASE_URL = 'https://api.box.com/'
 
 
 def requires_auth(func):
-    """
-    Does two checks:
-    - Checks to see if the OAuth credentials are expired based
-    on what we know about the last access token we got
-    and if so refreshes the access_token
-    - Checks to see if the status code of the response is 401,
-    and if so refreshes the access_token
-    """
+    """Checks for OAuth credentials in the session"""
     @wraps(func)
     def checked_auth(*args, **kwargs):
         if 'oauth_credentials' not in session:
@@ -63,6 +56,7 @@ def logout():
     session.clear()
     return 'You are now logged out of your Box account.'
 
+# OAuth 2 Methods
 
 def refresh_access_token_if_needed(func):
     """
@@ -89,6 +83,7 @@ def refresh_access_token_if_needed(func):
 
 @refresh_access_token_if_needed
 def get_box_folder(folder_id):
+    """No error checking. If an error occurs, we just return its JSON"""
     resource = '2.0/folders/%s' % folder_id
     url = build_box_api_url(resource)
 

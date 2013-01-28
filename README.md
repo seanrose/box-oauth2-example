@@ -3,6 +3,8 @@ box-oauth2-example
 
 A simple app showing how to use OAuth2 with Box. Designed for use with [Heroku](http://www.heroku.com/), though you can obviously host it however you like.
 
+[You can see an example here](http://box-oauth2-example.herokuapp.com/).
+
 # Pre-Setup
 
 Before you can do anything with the Box API, you need to [register to get a Client ID and Client Secret](http://bit.ly/boxapikey) to make API calls with. 
@@ -11,7 +13,7 @@ Before you can do anything with the Box API, you need to [register to get a Clie
 
 # Setup
 
-First create a virtual environment, and activate it
+First create a [virtual environment](http://pypi.python.org/pypi/virtualenv), and activate it
 
     >>> virtualenv venv --distribute
     >>> source venv/bin/activate
