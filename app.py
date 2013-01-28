@@ -121,7 +121,7 @@ def set_oauth_credentials(oauth_response):
     Will include a 15 second buffer on the exipration time
     to account for any network slowness.
     """
-    token_expiration = oauth_response['expires_in']
+    token_expiration = oauth_response.get('expires_in')
     session['oauth_expiration'] = (datetime.now()
                                    + timedelta(seconds=token_expiration - 15))
     session['oauth_credentials'] = oauth_response
